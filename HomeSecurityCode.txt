@@ -1,0 +1,121 @@
+int doorSensor = D4;
+int buzzer = D3;  
+
+
+bool armed = true;
+bool alert = false;
+bool ringing = false;
+bool notify = false;
+
+
+
+void setup()
+{
+    pinMode(doorSensor, INPUT_PULLUP); // Initialize D3 pin as input with an internal pull-up resistor
+    pinMode(buzzer, OUTPUT); 
+    pinMode(motionSensor, INPUT_PULLUP);
+    //Particle.subscribe("button", myHandler);// Initialize D7 pin as output
+    Particle.function("SamAlarm", phoneInput);
+}
+
+
+void loop()
+{
+    
+    if(armed){
+        alarm();
+    }else{
+        return;
+    }
+    if(alert){
+        //turn of ring
+        tone(D3,300);
+        delay(100);
+        
+        //publish an event to notify
+        if (!notify){
+            Particle.publish("Door opened","opened");
+            notify = true;
+        }
+        
+    }
+    
+}
+
+void alarm()
+{   
+    int magnetValState;
+    magnetValState = digitalRead(doorSensor);
+    
+    if(magnetValState ==  HIGH) 
+    {
+        alert = true;
+    }else{
+        alert = false;
+    }
+}
+
+int phoneInput(String data)
+{
+    if(strcmp(data,"Disable") == 0)
+    {
+        //code to run when the Disable button is pressed on your phone
+        armed = false;
+        ringing = false;
+        noTone(3);
+        notify = false;
+        alert = false;
+        flashDisable();
+        Particle.publish("Security Disabled", "disabled");
+    }
+    else if(strcmp(data,"Enable") == 0)
+    {
+        armed = true;
+        ringing = false;
+        
+        flashEnable();
+        Particle.publish("Security Enabled", "enabled");
+    }
+    return 0;
+}
+
+void flashDisable()
+{
+    RGB.control(true);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(255,40,0);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(255,40,0);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(255,40,0);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.control(false);
+}
+
+void flashEnable()
+{
+    RGB.control(true);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(0,200,250);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(0,200,250);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.color(0,200,250);
+    delay(300);
+    RGB.color(0,0,0);
+    delay(300);
+    RGB.control(false);
+}
+
